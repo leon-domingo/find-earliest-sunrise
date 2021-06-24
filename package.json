@@ -1,0 +1,25 @@
+{
+  "name": "find-earliest-sunrise",
+  "version": "1.0.0",
+  "description": "Find earliest sunrise and list the day length for this time",
+  "main": "index.js",
+  "scripts": {
+    "startDev": "./node_modules/.bin/nodemon index.js",
+    "start": "./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:leon-domingo/find-earliest-sunrise.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "dotenv": "^10.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.29.0",
+    "nodemon": "^2.0.7"
+  }
+}
