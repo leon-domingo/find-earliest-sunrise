@@ -8,13 +8,10 @@ const getSunriseSunsetData = async (apiURL, latitude, longitude) => {
         lng: longitude,
       },
     });
-    // console.log(res.data.results);
     return res.data.results;
   } catch (err) {
-    // console.error(err);
-    // console.log(err.request);
     const { status, statusText } = err.response;
-    console.log('The request has failed', status, statusText);
+    throw new Error(`Request failed! ${status} ${statusText}`);
   }
 };
 

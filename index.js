@@ -1,31 +1,29 @@
 #!/usr/bin/env node
-// const findEarliestSunrise = require('./lib/find-earliest-sunrise');
-// require('dotenv').config();
-//
-// const API_URL = process.env.API_URL;
-// if (!API_URL) {
-//   console.error('Please, define an API URL!');
-//   process.exit(1);
-// }
-// const MAX_CONCURRENT_FETCH = process.env.MAX_CONCURRENT_FETCH || 5;
-// const NUMBER_OF_POINTS = process.env.NUMBER_OF_POINTS || 100;
+const { getSunriseSunsetData } = require('./services/getData');
+const { getRandomLatitude, getRandomLongitude } = require('./lib/find-earliest-sunrise');
+// const { findEarliestSunrise } = require('./lib/find-earliest-sunrise');
+
+require('dotenv').config();
+
+const API_URL = process.env.API_URL;
+if (!API_URL) {
+  console.error('Please, define an API URL!');
+  process.exit(1);
+}
+const MAX_CONCURRENT_FETCH = process.env.MAX_CONCURRENT_FETCH || 5;
+const NUMBER_OF_POINTS = +process.env.NUMBER_OF_POINTS || 100;
 // findEarliestSunrise({
 //   apiURL: API_URL,
 //   maxConcurrentFetch: MAX_CONCURRENT_FETCH,
 //   numberOfPoints: NUMBER_OF_POINTS,
 // });
 
-async function createAPromise(value, delay) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(value);
-    }, delay);
+async function createAPromise(asyncFunc, data) {
+  return new Promise((resolve, reject) => {
+    asyncFunc(...data)
+      .then(asyncData => resolve(asyncData))
+      .catch(err => reject(err));
   });
-
-  // return new Promise(async (resolve) => {
-  //   await fetch('http://api.tol.io/api/tol/payment_failed/');
-  //   resolve(value);
-  // });
 }
 
 const TASK_STATUS = {
@@ -35,19 +33,18 @@ const TASK_STATUS = {
   FINISHED: 'FINISHED',
 };
 
-const NUMBER_OF_TASKS = 100;
-const TIME_PER_TASK = 2000;
+// const TIME_PER_TASK = 2000;
 const totalTasks = [];
-for (let n = 1; n <= NUMBER_OF_TASKS; n++) {
-  const id = `P${n}`;
+for (let n = 1; n <= NUMBER_OF_POINTS; n++) {
+  const id = `Task-${n}`;
   totalTasks.push({
     id,
-    data: {},
+    data: [API_URL, getRandomLatitude(), getRandomLongitude()],
+    resultData: null,
     status: TASK_STATUS.WAITING,
   });
 }
 
-const MAX_CONCURRENT_TASKS = 5;
 const totalTasksLength = totalTasks.length;
 function getTasksByStatus(tasks, taskStatus) {
   return () => tasks.filter(({ status }) => status === taskStatus);
@@ -57,14 +54,13 @@ const getSelectedTasks = getTasksByStatus(totalTasks, TASK_STATUS.SELECTED);
 const getRunningTasks = getTasksByStatus(totalTasks, TASK_STATUS.RUNNING);
 const getFinishedTasks = getTasksByStatus(totalTasks, TASK_STATUS.FINISHED);
 
-const poolingIntervalTime = 500;
+const polingIntervalTime = 500;
 const startTime = Date.now();
-const poolingInterval = setInterval(async () => {
+const polingInterval = setInterval(async () => {
   if (getFinishedTasks().length === totalTasksLength) {
-    const expectedTime = TIME_PER_TASK * totalTasksLength / MAX_CONCURRENT_TASKS;
-    const actualTime = Date.now() - startTime;
-    console.log(`Expected time ${expectedTime}ms / Actual time ${actualTime}ms`);
-    clearInterval(poolingInterval);
+    const elapsedTime = Date.now() - startTime;
+    console.log(`Elapsed time ${elapsedTime}ms`);
+    clearInterval(polingInterval);
     console.log('<EXIT>');
   }
 
@@ -74,10 +70,10 @@ const poolingInterval = setInterval(async () => {
     'Running:', getRunningTasks().length,
     'Finished:', getFinishedTasks().length,
   );
-  console.log(totalTasks.map(task => `${task.id}-${task.status}`).join(' | '));
+  // console.log(totalTasks.map(task => `${task.id}-${task.status}`).join(' | '));
 
   if (getWaitingTasks().length > 0) {
-    while (getSelectedTasks().length < MAX_CONCURRENT_TASKS) {
+    while (getSelectedTasks().length < MAX_CONCURRENT_FETCH) {
       const waitingTask = getWaitingTasks()[0];
       console.log(`Adding task ${waitingTask.id}...`);
       waitingTask.status = TASK_STATUS.SELECTED;
@@ -85,20 +81,23 @@ const poolingInterval = setInterval(async () => {
   }
 
   const selectedTasks = getSelectedTasks();
-  if (selectedTasks.length > 0 && getRunningTasks().length < MAX_CONCURRENT_TASKS) {
+  if (selectedTasks.length > 0 && getRunningTasks().length < MAX_CONCURRENT_FETCH) {
     for (let selectedTask of selectedTasks) {
       console.log(`Running task ${selectedTask.id}...`);
       selectedTask.status = TASK_STATUS.RUNNING;
-      // TODO: pass callback and data from "selectedTask"
-      createAPromise(selectedTask.id, TIME_PER_TASK)
-        .then(() => {
-          console.log(`${selectedTask.id} done!`);
-          selectedTask.status = TASK_STATUS.FINISHED; // XXX: this status is never really used
+      createAPromise(getSunriseSunsetData, selectedTask.data)
+        .then((data) => {
+          selectedTask.status = TASK_STATUS.FINISHED;
+          selectedTask.resultData = data;
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+          console.log(`${selectedTask.id} failed - ${err}`);
+          selectedTask.status = TASK_STATUS.FINISHED;
+          selectedTask.error = err;
+        });
     }
   }
-}, poolingIntervalTime);
+}, polingIntervalTime);
 console.log(
   getWaitingTasks().length,
   getSelectedTasks().length,
