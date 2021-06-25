@@ -57,53 +57,51 @@ const getSelectedTasks = getTasksByStatus(totalTasks, TASK_STATUS.SELECTED);
 const getRunningTasks = getTasksByStatus(totalTasks, TASK_STATUS.RUNNING);
 const getFinishedTasks = getTasksByStatus(totalTasks, TASK_STATUS.FINISHED);
 
-(async function() {
-  const poolingIntervalTime = 500;
-  const startTime = Date.now();
-  const poolingInterval = setInterval(async () => {
-    if (getFinishedTasks().length === totalTasksLength) {
-      const expectedTime = TIME_PER_TASK * totalTasksLength / MAX_CONCURRENT_TASKS;
-      const actualTime = Date.now() - startTime;
-      console.log(`Expected time ${expectedTime}ms / Actual time ${actualTime}ms`);
-      clearInterval(poolingInterval);
-      console.log('<EXIT>');
-    }
+const poolingIntervalTime = 500;
+const startTime = Date.now();
+const poolingInterval = setInterval(async () => {
+  if (getFinishedTasks().length === totalTasksLength) {
+    const expectedTime = TIME_PER_TASK * totalTasksLength / MAX_CONCURRENT_TASKS;
+    const actualTime = Date.now() - startTime;
+    console.log(`Expected time ${expectedTime}ms / Actual time ${actualTime}ms`);
+    clearInterval(poolingInterval);
+    console.log('<EXIT>');
+  }
 
-    console.log(
-      'Waiting:', getWaitingTasks().length,
-      'Selected (to be executed):', getSelectedTasks().length,
-      'Running:', getRunningTasks().length,
-      'Finished:', getFinishedTasks().length,
-    );
-    console.log(totalTasks.map(task => `${task.id}-${task.status}`).join(' | '));
-
-    if (getWaitingTasks().length > 0) {
-      while (getSelectedTasks().length < MAX_CONCURRENT_TASKS) {
-        const waitingTask = getWaitingTasks()[0];
-        console.log(`Adding task ${waitingTask.id}...`);
-        waitingTask.status = TASK_STATUS.SELECTED;
-      }
-    }
-
-    const selectedTasks = getSelectedTasks();
-    if (selectedTasks.length > 0 && getRunningTasks().length < MAX_CONCURRENT_TASKS) {
-      for (let selectedTask of selectedTasks) {
-        console.log(`Running task ${selectedTask.id}...`);
-        selectedTask.status = TASK_STATUS.RUNNING;
-        // TODO: pass callback and data from "selectedTask"
-        createAPromise(selectedTask.id, TIME_PER_TASK)
-          .then(() => {
-            console.log(`${selectedTask.id} done!`);
-            selectedTask.status = TASK_STATUS.FINISHED; // XXX: this status is never really used
-          })
-          .catch(err => console.error(err));
-      }
-    }
-  }, poolingIntervalTime);
   console.log(
-    getWaitingTasks().length,
-    getSelectedTasks().length,
-    getRunningTasks().length,
-    getFinishedTasks().length,
+    'Waiting:', getWaitingTasks().length,
+    'Selected (to be executed):', getSelectedTasks().length,
+    'Running:', getRunningTasks().length,
+    'Finished:', getFinishedTasks().length,
   );
-})();
+  console.log(totalTasks.map(task => `${task.id}-${task.status}`).join(' | '));
+
+  if (getWaitingTasks().length > 0) {
+    while (getSelectedTasks().length < MAX_CONCURRENT_TASKS) {
+      const waitingTask = getWaitingTasks()[0];
+      console.log(`Adding task ${waitingTask.id}...`);
+      waitingTask.status = TASK_STATUS.SELECTED;
+    }
+  }
+
+  const selectedTasks = getSelectedTasks();
+  if (selectedTasks.length > 0 && getRunningTasks().length < MAX_CONCURRENT_TASKS) {
+    for (let selectedTask of selectedTasks) {
+      console.log(`Running task ${selectedTask.id}...`);
+      selectedTask.status = TASK_STATUS.RUNNING;
+      // TODO: pass callback and data from "selectedTask"
+      createAPromise(selectedTask.id, TIME_PER_TASK)
+        .then(() => {
+          console.log(`${selectedTask.id} done!`);
+          selectedTask.status = TASK_STATUS.FINISHED; // XXX: this status is never really used
+        })
+        .catch(err => console.error(err));
+    }
+  }
+}, poolingIntervalTime);
+console.log(
+  getWaitingTasks().length,
+  getSelectedTasks().length,
+  getRunningTasks().length,
+  getFinishedTasks().length,
+);
