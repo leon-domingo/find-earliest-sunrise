@@ -27,7 +27,7 @@ Install the dependencies (1):
 $ npm install
 ```
 
-(1) **node** version **+10** should work fine. Version **+12** (or even **+14** is recomended).
+(1) **node** version **+10** should work fine. Version **+12** (or even **+14** is recommended).
 
 Copy the base _.env_ file
 
