@@ -57,3 +57,18 @@ or
 ```sh
 $ npm start
 ```
+
+In the case you're executing the script a couple of options are at your disposal:
+
+ - **-p, --points <number>** Number of points (equivalent to the environment variable *NUMBER_OF_POINTS*)
+ - **-r, --concurrent-requests <number>** Number of concurrent tasks (equivalent to the environment variable *MAX_CONCURRENT_FETCH*)
+
+*Both options have prevalence over the corresponding environment variables. The prevalence is actually __command line arguments__, __environment variables__, __default values__, in this order.*
+
+```sh
+$ ./index.js -p 100 -r 5
+```
+
+```sh
+$ ./index.js --points 100 --concurrent-requests 5
+```

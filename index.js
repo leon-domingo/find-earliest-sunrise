@@ -1,5 +1,14 @@
 #!/usr/bin/env node
 const { findEarliestSunrise } = require('./lib/find-earliest-sunrise');
+const { program } = require('commander');
+program.version('0.0.1');
+
+program
+  .option('-r, --concurrent-requests <number>', 'Maximum number of parallel tasks execution')
+  .option('-p, --points <number>', '# of random points (coordinates) to check');
+program.parse(process.argv);
+
+const options = program.opts();
 
 require('dotenv').config();
 const API_URL = process.env.API_URL;
@@ -7,8 +16,8 @@ if (!API_URL) {
   console.error('Please, define an API URL!');
   process.exit(1);
 }
-const MAX_CONCURRENT_FETCH = +process.env.MAX_CONCURRENT_FETCH || 5;
-const NUMBER_OF_POINTS = +process.env.NUMBER_OF_POINTS || 100;
+const MAX_CONCURRENT_FETCH = +(options.concurrentRequests || process.env.MAX_CONCURRENT_FETCH || 5);
+const NUMBER_OF_POINTS = +(options.points || process.env.NUMBER_OF_POINTS || 100);
 
 findEarliestSunrise({
   apiURL: API_URL,
