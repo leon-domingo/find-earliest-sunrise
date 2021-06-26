@@ -15,6 +15,21 @@ const getSunriseSunsetData = async (apiURL, latitude, longitude) => {
   }
 };
 
+const getSunriseSunsetDataMock = (failThreshold = .75, delay = 2000) =>
+  async function(a, b, c) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (Math.random() < failThreshold) {
+          resolve({ a, b, c });
+        } else {
+          const error = new Error('REQUEST FAILED');
+          reject(error);
+        }
+      }, delay);
+    });
+  };
+
 module.exports = {
   getSunriseSunsetData,
+  getSunriseSunsetDataMock,
 };
