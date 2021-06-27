@@ -58,10 +58,11 @@ or
 $ npm start
 ```
 
-In the case you're executing the script a couple of options are at your disposal:
+In the case you're executing the script, you'll have a few options are at your disposal:
 
  - **-p, --points <number>** Number of points (equivalent to the environment variable *NUMBER_OF_POINTS*)
  - **-r, --concurrent-requests <number>** Number of concurrent tasks (equivalent to the environment variable *MAX_CONCURRENT_FETCH*)
+ - **-d, --date** The day for the sunrise/sunset information you want to request in YYYY-MM-DD format.
 
 *Both options have prevalence over the corresponding environment variables. The prevalence is actually __command line arguments__, __environment variables__, __default values__, in this order.*
 
@@ -71,4 +72,27 @@ $ ./index.js -p 100 -r 5
 
 ```sh
 $ ./index.js --points 100 --concurrent-requests 5
+```
+
+```sh
+$ ./index.js --points=50 --concurrent-requests=10 --date=2021-01-10
+```
+
+If you want to remember, please refer to the **--help** option:
+
+```sh
+$ ./index.js --help
+```
+
+An information like this will be shown to you:
+
+```
+Usage: index [options]
+
+Options:
+  -V, --version                       output the version number
+  -r, --concurrent-requests <number>  Maximum number of parallel tasks execution. Default value is 5.
+  -p, --points <number>               # of random points (coordinates) to check. Default value is 100.
+  -d, --date <date>                   The date for the sunrise/sunset information you want to request in YYYY-MM-DD format. Default value is today.
+  -h, --help                          display help for command
 ```
